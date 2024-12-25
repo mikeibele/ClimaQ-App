@@ -1,65 +1,77 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Button, ScrollView, StyleSheet, Alert } from "react-native";
-import fetchWeather from "../utils/fetchWeather";
-import CityWeatherCard from "../component/CityWeatherCard";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
+import axios from "axios";
 
-const HomeScreen = () => {
+const API_KEY = "7b902e22617f60503e63a449259a926d"; // Replace with your OpenWeatherMap API Key
+
+const fetchWeather = async (cities) => {
+  try {
+    const data = await Promise.all(
+      cities.map(async (city) => {
+        const response = await axios.get(
+          `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=imperial`
+        );
+        return {
+          name: city,
+          temp: Math.round(response.data.main.temp),
+          weather: response.data.weather[0].main,
+          high: Math.round(response.data.main.temp_max),
+          low: Math.round(response.data.main.temp_min),
+        };
+      })
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching weather data:", error);
+    return [];
+  }
+};
+
+const HomeScreen = ({ navigation }) => {
+  const cities = ["Cupertino", "New York", "London", "Tokyo"];
   const [weatherData, setWeatherData] = useState([]);
-  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const cities = ["Cupertino", "San Francisco", "Seattle", "Miami", "London", "Los Angeles"];
-
-  // Fetch initial weather data for default cities
   useEffect(() => {
-    const loadWeatherData = async () => {
-      try {
-        const data = await fetchWeather(cities);
-        setWeatherData(data);
-      } catch (error) {
-        console.error("Error fetching initial weather data:", error);
-      }
-    };
-    loadWeatherData();
+    fetchWeather(cities).then((data) => {
+      setWeatherData(data);
+      setLoading(false);
+    });
   }, []);
 
-  // Handle search request
-  const handleSearch = async () => {
-    if (!search.trim()) {
-      Alert.alert("Input Error", "Please enter a city name.");
-      return;
-    }
-    try {
-      const data = await fetchWeather([search.trim()]);
-      if (data.length > 0) {
-        setWeatherData((prevData) => [data[0], ...prevData]); // Add the searched city to the top
-        setSearch(""); // Clear the search input
-      } else {
-        Alert.alert("City Not Found", "No weather data found for this city.");
-      }
-    } catch (error) {
-      console.error("Error fetching weather for searched city:", error);
-      Alert.alert("Error", "Could not fetch weather data. Please try again.");
-    }
-  };
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text>Loading Weather Data...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>ClimaQ</Text>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search for a city or airport"
-          placeholderTextColor="#aaa"
-          value={search}
-          onChangeText={setSearch}
-        />
-        <Button title="Search" onPress={handleSearch} color="#1e90ff" />
-      </View>
-      <ScrollView>
-        {weatherData.map((city, index) => (
-          <CityWeatherCard key={index} city={city} />
-        ))}
-      </ScrollView>
+      <Text style={styles.title}>Weather App</Text>
+      <FlatList
+        data={weatherData}
+        keyExtractor={(item) => item.name}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.cityButton}
+            onPress={() => navigation.navigate("WeatherDetail", { city: item.name })}
+          >
+            <Text style={styles.cityText}>
+              {item.name}: {item.temp}°F, {item.weather}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
     </View>
   );
 };
@@ -67,28 +79,29 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
-    paddingTop: 50,
+    padding: 20,
+    backgroundColor: "#f0f8ff",
   },
-  header: {
-    fontSize: 32,
-    color: "#fff",
+  title: {
+    fontSize: 24,
     fontWeight: "bold",
-    marginLeft: 20,
+    marginBottom: 20,
+    textAlign: "center",
   },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    margin: 20,
-  },
-  searchInput: {
-    flex: 1,
-    backgroundColor: "#333",
+  cityButton: {
+    padding: 15,
+    marginVertical: 8,
+    backgroundColor: "#e0f7fa",
     borderRadius: 10,
-    color: "#fff",
-    padding: 10,
-    fontSize: 16,
-    marginRight: 10,
+  },
+  cityText: {
+    fontSize: 18,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f0f8ff",
   },
 });
 
