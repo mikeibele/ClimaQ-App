@@ -1,4 +1,3 @@
-﻿# ClimaQ-App
 **Privacy Policy for ClimaQ**
 
 **Effective Date:** January 28, 2025
