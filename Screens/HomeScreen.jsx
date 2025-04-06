@@ -12,12 +12,15 @@ import {
 } from "react-native";
 import axios from "axios";
 
-const API_KEY = "7b902e22617f60503e63a449259a926d"; // Replace with your OpenWeatherMap API Key
+const API_KEY = "7b902e22617f60503e63a449259a926d";
+
+// Corrected image paths - use exact path to your image
+const BACKGROUND_IMAGE = require("../asset/image/clearsky.jpg");
 
 const fetchWeather = async (city) => {
   try {
     const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=imperial`
+      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
     );
     return {
       name: city,
@@ -54,11 +57,9 @@ const HomeScreen = ({ navigation }) => {
     const fetchInitialData = async () => {
       setLoading(true);
 
-      // Fetch weather for initial cities
       const data = await Promise.all(initialCities.map(fetchWeather));
       const filteredData = data.filter((item) => item !== null);
 
-      // Fetch weather for the user's location
       const userCity = await fetchLocation();
       if (userCity) {
         const userWeather = await fetchWeather(userCity);
@@ -85,20 +86,29 @@ const HomeScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <ImageBackground
+        source={BACKGROUND_IMAGE}
+        style={styles.loadingContainer}
+        resizeMode="cover"
+      >
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>Loading Weather Data...</Text>
-      </View>
+      </ImageBackground>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      source={BACKGROUND_IMAGE}
+      style={styles.container}
+      resizeMode="cover"
+    >
       <Text style={styles.title}>Weather</Text>
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchBar}
           placeholder="Search for a city"
+          placeholderTextColor="#ccc"
           value={search}
           onChangeText={setSearch}
         />
@@ -112,7 +122,6 @@ const HomeScreen = ({ navigation }) => {
         />
       )}
 
-      {/* Weather Card for My Location */}
       {myLocationWeather && (
         <TouchableOpacity
           style={styles.card}
@@ -120,26 +129,19 @@ const HomeScreen = ({ navigation }) => {
             navigation.navigate("WeatherDetail", { city: myLocationWeather.name })
           }
         >
-          <ImageBackground
-            style={styles.cardBackground}
-            source={require("./WeatherDetailScreen")}
-            imageStyle={{ borderRadius: 10 }}
-          >
-            <View style={styles.cardContent}>
-              <Text style={styles.cityName}>My Location</Text>
-              <Text style={styles.temperature}>{myLocationWeather.temp}°F</Text>
-              <Text style={styles.weatherDescription}>
-                {myLocationWeather.weather}
-              </Text>
-              <Text style={styles.highLow}>
-                H:{myLocationWeather.high}° L:{myLocationWeather.low}°
-              </Text>
-            </View>
-          </ImageBackground>
+          <View style={styles.cardContent}>
+            <Text style={styles.cityName}>My Location</Text>
+            <Text style={styles.temperature}>{myLocationWeather.temp}°C</Text>
+            <Text style={styles.weatherDescription}>
+              {myLocationWeather.weather}
+            </Text>
+            <Text style={styles.highLow}>
+              H:{myLocationWeather.high}°C L:{myLocationWeather.low}°C
+            </Text>
+          </View>
         </TouchableOpacity>
       )}
 
-      {/* Weather Cards for Other Cities */}
       <FlatList
         data={weatherData}
         keyExtractor={(item) => item.name}
@@ -150,31 +152,24 @@ const HomeScreen = ({ navigation }) => {
               navigation.navigate("WeatherDetail", { city: item.name })
             }
           >
-            <ImageBackground
-              style={styles.cardBackground}
-              source={require("./WeatherDetailScreen")}
-              imageStyle={{ borderRadius: 10 }}
-            >
-              <View style={styles.cardContent}>
-                <Text style={styles.cityName}>{item.name}</Text>
-                <Text style={styles.temperature}>{item.temp}°F</Text>
-                <Text style={styles.weatherDescription}>{item.weather}</Text>
-                <Text style={styles.highLow}>
-                  H:{item.high}° L:{item.low}°
-                </Text>
-              </View>
-            </ImageBackground>
+            <View style={styles.cardContent}>
+              <Text style={styles.cityName}>{item.name}</Text>
+              <Text style={styles.temperature}>{item.temp}°C</Text>
+              <Text style={styles.weatherDescription}>{item.weather}</Text>
+              <Text style={styles.highLow}>
+                H:{item.high}°C L:{item.low}°C
+              </Text>
+            </View>
           </TouchableOpacity>
         )}
       />
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
     paddingHorizontal: 15,
     paddingTop: 50,
   },
@@ -184,6 +179,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginBottom: 15,
     textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
   },
   searchContainer: {
     flexDirection: "row",
@@ -192,7 +190,7 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     flex: 1,
-    backgroundColor: "#333",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     color: "#fff",
     borderRadius: 8,
     paddingHorizontal: 15,
@@ -207,17 +205,11 @@ const styles = StyleSheet.create({
   card: {
     marginVertical: 8,
     borderRadius: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
     overflow: "hidden",
   },
-  cardBackground: {
-    height: 120,
-    justifyContent: "center",
-    paddingHorizontal: 15,
-  },
   cardContent: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    borderRadius: 10,
-    padding: 10,
+    padding: 15,
   },
   cityName: {
     fontSize: 20,
@@ -228,6 +220,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#fff",
+    marginVertical: 5,
   },
   weatherDescription: {
     fontSize: 16,
@@ -236,16 +229,19 @@ const styles = StyleSheet.create({
   highLow: {
     fontSize: 14,
     color: "#ccc",
+    marginTop: 5,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#000",
   },
   loadingText: {
     color: "#fff",
     marginTop: 10,
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
   },
 });
 
