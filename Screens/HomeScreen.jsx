@@ -11,19 +11,19 @@ import {
   Button,
 } from "react-native";
 import axios from "axios";
+import * as Location from "expo-location"; // ✅ Import expo-location
 
 const API_KEY = "7b902e22617f60503e63a449259a926d";
-
-// Corrected image paths - use exact path to your image
 const BACKGROUND_IMAGE = require("../asset/image/clearsky.jpg");
 
+// Fetch weather by city name
 const fetchWeather = async (city) => {
   try {
     const response = await axios.get(
       `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
     );
     return {
-      name: city,
+      name: response.data.name,
       temp: Math.round(response.data.main.temp),
       weather: response.data.weather[0].main,
       high: Math.round(response.data.main.temp_max),
@@ -35,12 +35,31 @@ const fetchWeather = async (city) => {
   }
 };
 
-const fetchLocation = async () => {
+// ✅ Fetch weather using current GPS coordinates
+const fetchWeatherByCoords = async () => {
   try {
-    const response = await axios.get("https://ipapi.co/json/");
-    return response.data.city;
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      console.warn("Permission to access location was denied");
+      return null;
+    }
+
+    const location = await Location.getCurrentPositionAsync({});
+    const { latitude, longitude } = location.coords;
+
+    const response = await axios.get(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
+    );
+
+    return {
+      name: response.data.name,
+      temp: Math.round(response.data.main.temp),
+      weather: response.data.weather[0].main,
+      high: Math.round(response.data.main.temp_max),
+      low: Math.round(response.data.main.temp_min),
+    };
   } catch (error) {
-    console.error("Error fetching user location:", error);
+    console.error("Error fetching location weather:", error);
     return null;
   }
 };
@@ -57,16 +76,12 @@ const HomeScreen = ({ navigation }) => {
     const fetchInitialData = async () => {
       setLoading(true);
 
-      const data = await Promise.all(initialCities.map(fetchWeather));
-      const filteredData = data.filter((item) => item !== null);
+      const cityWeather = await Promise.all(initialCities.map(fetchWeather));
+      setWeatherData(cityWeather.filter((item) => item !== null));
 
-      const userCity = await fetchLocation();
-      if (userCity) {
-        const userWeather = await fetchWeather(userCity);
-        if (userWeather) setMyLocationWeather(userWeather);
-      }
+      const locationWeather = await fetchWeatherByCoords();
+      if (locationWeather) setMyLocationWeather(locationWeather);
 
-      setWeatherData(filteredData);
       setLoading(false);
     };
 
@@ -114,6 +129,7 @@ const HomeScreen = ({ navigation }) => {
         />
         <Button title="Search" onPress={handleSearch} color="#007AFF" />
       </View>
+
       {searchLoading && (
         <ActivityIndicator
           size="small"
@@ -246,3 +262,5 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+
+

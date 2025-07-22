@@ -2,7 +2,7 @@
   "expo": {
     "name": "ClimaQ",
     "slug": "ClimaQ",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -23,6 +23,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d9f84c9c-af92-40d9-b3c4-e60a218ff20e"
+      }
     }
   }
 }
