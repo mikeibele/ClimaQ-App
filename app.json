@@ -2,11 +2,10 @@
   "expo": {
     "name": "ClimaQ",
     "slug": "ClimaQ",
-    "version": "2.0.0",
+    "version": "2.1.1",
     "orientation": "portrait",
     "icon": "./asset/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./asset/splash-icon.png",
       "resizeMode": "contain",
@@ -20,11 +19,23 @@
         "foregroundImage": "./asset/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ibele_canada.ClimaQ"
+      "package": "com.ibele_canada.ClimaQ",
+      "minSdkVersion": 21,
+      "targetSdkVersion": 35,
+      "versionCode": 7
     },
     "web": {
       "favicon": "./asset/favicon.png"
     },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow ClimaQ to access your location when the app is in use.",
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "d9f84c9c-af92-40d9-b3c4-e60a218ff20e"

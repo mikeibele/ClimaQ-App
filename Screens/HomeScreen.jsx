@@ -38,31 +38,82 @@ const fetchWeather = async (city) => {
 // ✅ Fetch weather using current GPS coordinates
 const fetchWeatherByCoords = async () => {
   try {
+    // Request location permission
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       console.warn("Permission to access location was denied");
       return null;
     }
 
+    // Get current GPS location
     const location = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = location.coords;
 
+    // Call weather API using coordinates
     const response = await axios.get(
       `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
     );
 
-    return {
-      name: response.data.name,
-      temp: Math.round(response.data.main.temp),
-      weather: response.data.weather[0].main,
-      high: Math.round(response.data.main.temp_max),
-      low: Math.round(response.data.main.temp_min),
-    };
+    const data = response?.data;
+
+    // Check if response has the necessary fields
+    if (
+      data &&
+      data.name &&
+      data.main &&
+      typeof data.main.temp === "number" &&
+      typeof data.main.temp_max === "number" &&
+      typeof data.main.temp_min === "number" &&
+      data.weather &&
+      Array.isArray(data.weather) &&
+      data.weather[0]?.main
+    ) {
+      return {
+        name: data.name,
+        temp: Math.round(data.main.temp),
+        weather: data.weather[0].main,
+        high: Math.round(data.main.temp_max),
+        low: Math.round(data.main.temp_min),
+      };
+    } else {
+      console.warn("Incomplete weather data received:", data);
+      return null;
+    }
   } catch (error) {
-    console.error("Error fetching location weather:", error);
+    console.error("Error fetching weather by coordinates:", error);
     return null;
   }
 };
+
+
+
+// const fetchWeatherByCoords = async () => {
+//   try {
+//     const { status } = await Location.requestForegroundPermissionsAsync();
+//     if (status !== "granted") {
+//       console.warn("Permission to access location was denied");
+//       return null;
+//     }
+
+//     const location = await Location.getCurrentPositionAsync({});
+//     const { latitude, longitude } = location.coords;
+
+//     const response = await axios.get(
+//       `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
+//     );
+
+//     return {
+//       name: response.data.name,
+//       temp: Math.round(response.data.main.temp),
+//       weather: response.data.weather[0].main,
+//       high: Math.round(response.data.main.temp_max),
+//       low: Math.round(response.data.main.temp_min),
+//     };
+//   } catch (error) {
+//     console.error("Error fetching location weather:", error);
+//     return null;
+//   }
+// };
 
 const HomeScreen = ({ navigation }) => {
   const initialCities = ["Cupertino", "New York", "London", "Tokyo"];
@@ -138,7 +189,27 @@ const HomeScreen = ({ navigation }) => {
         />
       )}
 
-      {myLocationWeather && (
+      {myLocationWeather?.name && (
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() =>
+            navigation.navigate("WeatherDetailScreen", { city: myLocationWeather.name })
+          }
+        >
+          <View style={styles.cardContent}>
+            <Text style={styles.cityName}>My Location</Text>
+            <Text style={styles.temperature}>{myLocationWeather.temp}°C</Text>
+            <Text style={styles.weatherDescription}>
+              {myLocationWeather.weather}
+            </Text>
+            <Text style={styles.highLow}>
+              H:{myLocationWeather.high}°C L:{myLocationWeather.low}°C
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
+
+      {/* {myLocationWeather && (
         <TouchableOpacity
           style={styles.card}
           onPress={() =>
@@ -156,7 +227,7 @@ const HomeScreen = ({ navigation }) => {
             </Text>
           </View>
         </TouchableOpacity>
-      )}
+      )} */}
 
       <FlatList
         data={weatherData}
@@ -165,7 +236,7 @@ const HomeScreen = ({ navigation }) => {
           <TouchableOpacity
             style={styles.card}
             onPress={() =>
-              navigation.navigate("WeatherDetail", { city: item.name })
+              navigation.navigate("WeatherDetailScreen", { city: item.name })
             }
           >
             <View style={styles.cardContent}>
