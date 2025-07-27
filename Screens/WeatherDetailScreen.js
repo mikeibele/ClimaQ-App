@@ -8,7 +8,7 @@ import {
   Image,
   ImageBackground,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+// import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import axios from "axios";
 
@@ -147,14 +147,14 @@ const WeatherDetailScreen = ({ route }) => {
         </View>
 
         {/* Map */}
-        <View style={styles.mapContainer}>
+        {/* <View style={styles.mapContainer}>
           <MapView
             style={styles.map}
             initialRegion={{ latitude: lat, longitude: lon, latitudeDelta: 0.1, longitudeDelta: 0.1 }}
           >
             <Marker coordinate={{ latitude: lat, longitude: lon }} />
           </MapView>
-        </View>
+        </View> */}
 
         {/* Hourly Forecast */}
         <Text style={styles.sectionTitle}>Hourly Forecast</Text>

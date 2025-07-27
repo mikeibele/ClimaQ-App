@@ -19,10 +19,7 @@
         "foregroundImage": "./asset/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ibele_canada.ClimaQ",
-      "minSdkVersion": 21,
-      "targetSdkVersion": 35,
-      "versionCode": 7
+      "package": "com.ibele_canada.ClimaQ"
     },
     "web": {
       "favicon": "./asset/favicon.png"

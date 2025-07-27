@@ -1,29 +1,18 @@
-import 'react-native-gesture-handler'; // 👈 Make sure this is at the top
-import { GestureHandlerRootView } from "react-native-gesture-handler"; // 👈 Import this
-import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
-import HomeScreen from "./Screens/HomeScreen";
-import WeatherDetailScreen from "./Screens/WeatherDetailScreen";
-
-const Stack = createStackNavigator();
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AppNavigation from './navigation/appNavigation';
+import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}> 
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Home">
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="WeatherDetailScreen"
-            component={WeatherDetailScreen}
-            options={{ headerShown: false }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <AppNavigation />
+          <StatusBar style="auto" />
+        </NavigationContainer>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
