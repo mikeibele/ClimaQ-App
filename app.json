@@ -2,7 +2,7 @@
   "expo": {
     "name": "ClimaQ",
     "slug": "ClimaQ",
-    "version": "2.1.1",
+    "version": "3.0.0",
     "orientation": "portrait",
     "icon": "./asset/icon.png",
     "userInterfaceStyle": "light",
