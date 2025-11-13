@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import axios from "axios";
 import * as Location from "expo-location"; // ✅ Import expo-location
+import { useNavigation } from '@react-navigation/native';
 
 const API_KEY = "7b902e22617f60503e63a449259a926d";
 const BACKGROUND_IMAGE = require("../asset/image/clearsky.jpg");
@@ -38,25 +39,20 @@ const fetchWeather = async (city) => {
 // ✅ Fetch weather using current GPS coordinates
 const fetchWeatherByCoords = async () => {
   try {
-    // Request location permission
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       console.warn("Permission to access location was denied");
       return null;
     }
 
-    // Get current GPS location
     const location = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = location.coords;
 
-    // Call weather API using coordinates
     const response = await axios.get(
       `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
     );
 
     const data = response?.data;
-
-    // Check if response has the necessary fields
     if (
       data &&
       data.name &&
@@ -85,43 +81,15 @@ const fetchWeatherByCoords = async () => {
   }
 };
 
-
-
-// const fetchWeatherByCoords = async () => {
-//   try {
-//     const { status } = await Location.requestForegroundPermissionsAsync();
-//     if (status !== "granted") {
-//       console.warn("Permission to access location was denied");
-//       return null;
-//     }
-
-//     const location = await Location.getCurrentPositionAsync({});
-//     const { latitude, longitude } = location.coords;
-
-//     const response = await axios.get(
-//       `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
-//     );
-
-//     return {
-//       name: response.data.name,
-//       temp: Math.round(response.data.main.temp),
-//       weather: response.data.weather[0].main,
-//       high: Math.round(response.data.main.temp_max),
-//       low: Math.round(response.data.main.temp_min),
-//     };
-//   } catch (error) {
-//     console.error("Error fetching location weather:", error);
-//     return null;
-//   }
-// };
-
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = () => {
   const initialCities = ["Cupertino", "New York", "London", "Tokyo"];
   const [weatherData, setWeatherData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [myLocationWeather, setMyLocationWeather] = useState(null);
+  const navigation = useNavigation();
+
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -170,6 +138,8 @@ const HomeScreen = ({ navigation }) => {
       resizeMode="cover"
     >
       <Text style={styles.title}>Weather</Text>
+
+      {/* 🔍 Search Bar */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchBar}
@@ -189,11 +159,14 @@ const HomeScreen = ({ navigation }) => {
         />
       )}
 
+      {/* 📍 My Location */}
       {myLocationWeather?.name && (
         <TouchableOpacity
           style={styles.card}
           onPress={() =>
-            navigation.navigate("WeatherDetailScreen", { city: myLocationWeather.name })
+            navigation.navigate("WeatherDetailScreen", {
+              city: myLocationWeather.name,
+            })
           }
         >
           <View style={styles.cardContent}>
@@ -209,26 +182,7 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
       )}
 
-      {/* {myLocationWeather && (
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() =>
-            navigation.navigate("WeatherDetail", { city: myLocationWeather.name })
-          }
-        >
-          <View style={styles.cardContent}>
-            <Text style={styles.cityName}>My Location</Text>
-            <Text style={styles.temperature}>{myLocationWeather.temp}°C</Text>
-            <Text style={styles.weatherDescription}>
-              {myLocationWeather.weather}
-            </Text>
-            <Text style={styles.highLow}>
-              H:{myLocationWeather.high}°C L:{myLocationWeather.low}°C
-            </Text>
-          </View>
-        </TouchableOpacity>
-      )} */}
-
+      {/* 🌍 City List */}
       <FlatList
         data={weatherData}
         keyExtractor={(item) => item.name}
@@ -250,6 +204,16 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         )}
       />
+
+      {/* 🛰️ Live Radar Button */}
+      <View style={styles.radarButtonContainer}>
+        <TouchableOpacity
+          style={styles.radarButton}
+          onPress={() => navigation.navigate("RadarMapScreen")}
+        >
+          <Text style={styles.radarButtonText}>🛰️ Live Radar Map</Text>
+        </TouchableOpacity>
+      </View>
     </ImageBackground>
   );
 };
@@ -326,12 +290,22 @@ const styles = StyleSheet.create({
   loadingText: {
     color: "#fff",
     marginTop: 10,
-    textShadowColor: "rgba(0, 0, 0, 0.75)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
+  },
+  radarButtonContainer: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  radarButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 10,
+  },
+  radarButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
 export default HomeScreen;
-
-
