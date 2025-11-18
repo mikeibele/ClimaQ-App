@@ -9,10 +9,11 @@ import {
   TextInput,
   ImageBackground,
   Button,
+  SafeAreaView,
 } from "react-native";
 import axios from "axios";
-import * as Location from "expo-location"; // ✅ Import expo-location
-import { useNavigation } from '@react-navigation/native';
+import * as Location from "expo-location";
+import { useNavigation } from "@react-navigation/native";
 
 const API_KEY = "7b902e22617f60503e63a449259a926d";
 const BACKGROUND_IMAGE = require("../asset/image/clearsky.jpg");
@@ -36,7 +37,7 @@ const fetchWeather = async (city) => {
   }
 };
 
-// ✅ Fetch weather using current GPS coordinates
+// Fetch weather using coordinates
 const fetchWeatherByCoords = async () => {
   try {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -52,29 +53,15 @@ const fetchWeatherByCoords = async () => {
       `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
     );
 
-    const data = response?.data;
-    if (
-      data &&
-      data.name &&
-      data.main &&
-      typeof data.main.temp === "number" &&
-      typeof data.main.temp_max === "number" &&
-      typeof data.main.temp_min === "number" &&
-      data.weather &&
-      Array.isArray(data.weather) &&
-      data.weather[0]?.main
-    ) {
-      return {
-        name: data.name,
-        temp: Math.round(data.main.temp),
-        weather: data.weather[0].main,
-        high: Math.round(data.main.temp_max),
-        low: Math.round(data.main.temp_min),
-      };
-    } else {
-      console.warn("Incomplete weather data received:", data);
-      return null;
-    }
+    const data = response.data;
+
+    return {
+      name: data.name,
+      temp: Math.round(data.main.temp),
+      weather: data.weather[0].main,
+      high: Math.round(data.main.temp_max),
+      low: Math.round(data.main.temp_min),
+    };
   } catch (error) {
     console.error("Error fetching weather by coordinates:", error);
     return null;
@@ -89,7 +76,6 @@ const HomeScreen = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [myLocationWeather, setMyLocationWeather] = useState(null);
   const navigation = useNavigation();
-
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -109,22 +95,21 @@ const HomeScreen = () => {
 
   const handleSearch = async () => {
     if (!search.trim()) return;
+
     setSearchLoading(true);
     const data = await fetchWeather(search.trim());
+
     if (data) {
-      setWeatherData((prevData) => [data, ...prevData]);
+      setWeatherData((prev) => [data, ...prev]);
     }
+
     setSearch("");
     setSearchLoading(false);
   };
 
   if (loading) {
     return (
-      <ImageBackground
-        source={BACKGROUND_IMAGE}
-        style={styles.loadingContainer}
-        resizeMode="cover"
-      >
+      <ImageBackground source={BACKGROUND_IMAGE} style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>Loading Weather Data...</Text>
       </ImageBackground>
@@ -132,89 +117,87 @@ const HomeScreen = () => {
   }
 
   return (
-    <ImageBackground
-      source={BACKGROUND_IMAGE}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      <Text style={styles.title}>Weather</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#000" }}>
+      <ImageBackground source={BACKGROUND_IMAGE} style={styles.container}>
+        <Text style={styles.title}>Weather</Text>
 
-      {/* 🔍 Search Bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search for a city"
-          placeholderTextColor="#ccc"
-          value={search}
-          onChangeText={setSearch}
-        />
-        <Button title="Search" onPress={handleSearch} color="#007AFF" />
-      </View>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search for a city"
+            placeholderTextColor="#ccc"
+            value={search}
+            onChangeText={setSearch}
+          />
+          <Button title="Search" onPress={handleSearch} color="#007AFF" />
+        </View>
 
-      {searchLoading && (
-        <ActivityIndicator
-          size="small"
-          color="#007AFF"
-          style={styles.searchLoading}
-        />
-      )}
+        {searchLoading && (
+          <ActivityIndicator
+            size="small"
+            color="#007AFF"
+            style={styles.searchLoading}
+          />
+        )}
 
-      {/* 📍 My Location */}
-      {myLocationWeather?.name && (
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() =>
-            navigation.navigate("WeatherDetailScreen", {
-              city: myLocationWeather.name,
-            })
-          }
-        >
-          <View style={styles.cardContent}>
-            <Text style={styles.cityName}>My Location</Text>
-            <Text style={styles.temperature}>{myLocationWeather.temp}°C</Text>
-            <Text style={styles.weatherDescription}>
-              {myLocationWeather.weather}
-            </Text>
-            <Text style={styles.highLow}>
-              H:{myLocationWeather.high}°C L:{myLocationWeather.low}°C
-            </Text>
-          </View>
-        </TouchableOpacity>
-      )}
-
-      {/* 🌍 City List */}
-      <FlatList
-        data={weatherData}
-        keyExtractor={(item) => item.name}
-        renderItem={({ item }) => (
+        {/* My Location */}
+        {myLocationWeather?.name && (
           <TouchableOpacity
             style={styles.card}
             onPress={() =>
-              navigation.navigate("WeatherDetailScreen", { city: item.name })
+              navigation.navigate("WeatherDetailScreen", {
+                city: myLocationWeather.name,
+              })
             }
           >
             <View style={styles.cardContent}>
-              <Text style={styles.cityName}>{item.name}</Text>
-              <Text style={styles.temperature}>{item.temp}°C</Text>
-              <Text style={styles.weatherDescription}>{item.weather}</Text>
+              <Text style={styles.cityName}>My Location</Text>
+              <Text style={styles.temperature}>{myLocationWeather.temp}°C</Text>
+              <Text style={styles.weatherDescription}>
+                {myLocationWeather.weather}
+              </Text>
               <Text style={styles.highLow}>
-                H:{item.high}°C L:{item.low}°C
+                H:{myLocationWeather.high}°C L:{myLocationWeather.low}°C
               </Text>
             </View>
           </TouchableOpacity>
         )}
-      />
 
-      {/* 🛰️ Live Radar Button */}
-      <View style={styles.radarButtonContainer}>
-        <TouchableOpacity
-          style={styles.radarButton}
-          onPress={() => navigation.navigate("RadarMapScreen")}
-        >
-          <Text style={styles.radarButtonText}>🛰️ Live Radar Map</Text>
-        </TouchableOpacity>
-      </View>
-    </ImageBackground>
+        {/* FlatList + Footer Radar Button */}
+        <FlatList
+          data={weatherData}
+          keyExtractor={(item) => item.name}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() =>
+                navigation.navigate("WeatherDetailScreen", { city: item.name })
+              }
+            >
+              <View style={styles.cardContent}>
+                <Text style={styles.cityName}>{item.name}</Text>
+                <Text style={styles.temperature}>{item.temp}°C</Text>
+                <Text style={styles.weatherDescription}>{item.weather}</Text>
+                <Text style={styles.highLow}>
+                  H:{item.high}°C L:{item.low}°C
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          ListFooterComponent={
+            <View style={styles.footerSpacing}>
+              <TouchableOpacity
+                style={styles.radarButton}
+                onPress={() => navigation.navigate("RadarMapScreen")}
+              >
+                <Text style={styles.radarButtonText}>🛰️ Live Radar Map</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      </ImageBackground>
+    </SafeAreaView>
   );
 };
 
@@ -222,7 +205,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 15,
-    paddingTop: 50,
+    paddingTop: 20,
   },
   title: {
     fontSize: 32,
@@ -230,9 +213,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginBottom: 15,
     textAlign: "center",
-    textShadowColor: "rgba(0, 0, 0, 0.75)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
   },
   searchContainer: {
     flexDirection: "row",
@@ -291,8 +271,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginTop: 10,
   },
-  radarButtonContainer: {
+  footerSpacing: {
     marginTop: 20,
+    paddingBottom: 40, // KEYS: prevents overlap with bottom gesture bar
     alignItems: "center",
   },
   radarButton: {
